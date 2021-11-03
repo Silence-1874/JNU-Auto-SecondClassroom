@@ -7,7 +7,7 @@ message = '''
           "{hdmc}"活动招募中!
           招募人数:{zmrs},现已报名了{bmrs}人
           活动地点:{hddd}
-          活动时长:{hdsc}
+          活动时长:{hdsc}, 学时:{xs}
           活动时间:{kssj}至{jssj}
           报名时间:{bmkssj}至{bmjssj}
           '''
@@ -48,14 +48,14 @@ def check():
     flag = False
     for active in data['data']['list']:
         if active['zmrs'] > active['bmrs'] and active['hdmc'].find('团日活动') == -1:  # 有些班级的团日活动长期占榜，排除之
-            content = message.format(zmrs=active['zmrs'],
+            content = message.format(hdmc=active['hdmc'],
+                                     zmrs=active['zmrs'],
                                      bmrs=active['bmrs'],
-                                     xs=active['xs'],
+                                     hddd=active['hddd'],
                                      hdsc=count_time(active['kssj'], active['jssj']),
-                                     hdmc=active['hdmc'],
+                                     xs=active['xs'],
                                      kssj=active['kssj'],
                                      jssj=active['jssj'],
-                                     hddd=active['hddd'],
                                      bmkssj=active['bmkssj'],
                                      bmjssj=active['bmjssj']
                                      )
