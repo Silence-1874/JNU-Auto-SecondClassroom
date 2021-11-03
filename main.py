@@ -1,11 +1,15 @@
 import requests
 import send_eamil
+import time
 
 # 发送邮件的内容
 message = '''
-          # 招募人数:{zmrs},#现已报名了{bmrs},学时:{xs}
-          # 活动名:{hdmc},活动时间：{kssj}至{jssj},地点:{hddd}
-          # 报名时间:{bmkssj}至{bmjssj}
+          "{hdmc}"活动招募中!
+          招募人数:{zmrs},现已报名了{bmrs}人
+          活动地点:{hddd}
+          活动时长:{hdsc}
+          活动时间:{kssj}至{jssj}
+          报名时间:{bmkssj}至{bmjssj}
           '''
 
 # 请求头
@@ -41,10 +45,41 @@ def check():
     response.encoding = response.apparent_encoding
     # 转换成json格式
     data = response.json()
-
+    flag = False
     for active in data['data']['list']:
-        if active['zmrs'] > active['bmrs']:
-            message.format()
+        if active['zmrs'] > active['bmrs'] and active['hdmc'].find('团日活动') == -1:  # 有些班级的团日活动长期占榜，排除之
+            content = message.format(zmrs=active['zmrs'],
+                                     bmrs=active['bmrs'],
+                                     xs=active['xs'],
+                                     hdsc=count_time(active['kssj'], active['jssj']),
+                                     hdmc=active['hdmc'],
+                                     kssj=active['kssj'],
+                                     jssj=active['jssj'],
+                                     hddd=active['hddd'],
+                                     bmkssj=active['bmkssj'],
+                                     bmjssj=active['bmjssj']
+                                     )
+            print(content)
+            flag = True
+            send_eamil.send(content)
+    if not flag:
+        print('本次查询无结果')
+
+
+# 计算活动时长(应该的不会有跨日的活动吧……)
+def count_time(start_time, end_time):
+    hour = int(end_time[-5:-3]) - int(start_time[-5:-3])
+    minute = int(end_time[-2:]) - int(start_time[-2:])
+    if minute < 0:
+        minute += 60
+        # 本来想写 hour-- 结果居然报错了，才知道Python没有自增/自减运算符……
+        hour -= 1
+    return '{hour}小时{minute}分钟'.format(hour=hour, minute=minute)
+
 
 if __name__ == '__main__':
-    check()
+    while True:
+        print('开始查询(' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())) + ')')
+        check()
+        # 每隔3分钟检查一次
+        time.sleep(3 * 60)
