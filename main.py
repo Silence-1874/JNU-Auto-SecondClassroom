@@ -4,7 +4,7 @@ import time
 
 # 发送邮件的内容
 message = '''
-          "{hdmc}"活动招募中!
+          [{hdmc}]活动招募中!
           招募人数:{zmrs},现已报名了{bmrs}人
           活动地点:{hddd}
           活动时长:{hdsc}, 学时:{xs}
@@ -66,7 +66,7 @@ def check():
         print('本次查询无结果')
 
 
-# 计算活动时长(应该的不会有跨日的活动吧……)
+# 计算活动时长(应该不会有跨日的活动吧……)
 def count_time(start_time, end_time):
     hour = int(end_time[-5:-3]) - int(start_time[-5:-3])
     minute = int(end_time[-2:]) - int(start_time[-2:])
