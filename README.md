@@ -6,7 +6,6 @@
 >
 > 正好刚开始学Python爬虫，想着能不能用爬虫的机制实时监控二课更新信息，有新活动招募，或者活动有空出来的名额时，就自动发邮件提醒。
 
-![效果图](https://github.com/Silence-Zoe/JNU-Auto-SecondClassroom/blob/main/rendering.jpg) 
 
 - 2021.11.3
 
@@ -15,6 +14,9 @@
     > 终于完成所有基本功能了
     >
     > 现在的问题是这个脚本必须在电脑上开着Python运行，后期有时间找找怎么让脚本在手机上一直运行
+    
+    目前效果：
+    ![效果图](https://github.com/Silence-Zoe/JNU-Auto-SecondClassroom/blob/main/rendering.jpg) 
     
 - 2021.11.2
 
