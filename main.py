@@ -1,14 +1,16 @@
 import requests
-import send_eamil
 import time
+import datetime
+import send_eamil
+import is_conflict
 
 # 发送邮件的内容
 message = '''
           [{hdmc}]活动招募中!
           招募人数:{zmrs},现已报名了{bmrs}人
           活动地点:{hddd}
-          活动时长:{hdsc}, 学时:{xs}
-          活动时间:{kssj}至{jssj}
+          活动时长:{hdsc},学时:{xs}
+          活动时间:({weekday}){kssj}至{jssj}
           报名时间:{bmkssj}至{bmjssj}
           '''
 
@@ -45,24 +47,39 @@ def check():
     response.encoding = response.apparent_encoding
     # 转换成json格式
     data = response.json()
+    # 判断是否找到可报名的活动，便于之后决定是否发送邮件
     flag = False
+    # 邮件内容
+    content = ''
     for active in data['data']['list']:
         if active['zmrs'] > active['bmrs'] and active['hdmc'].find('团日活动') == -1:  # 有些班级的团日活动长期占榜，排除之
-            content = message.format(hdmc=active['hdmc'],
-                                     zmrs=active['zmrs'],
-                                     bmrs=active['bmrs'],
-                                     hddd=active['hddd'],
-                                     hdsc=count_time(active['kssj'], active['jssj']),
-                                     xs=active['xs'],
-                                     kssj=active['kssj'],
-                                     jssj=active['jssj'],
-                                     bmkssj=active['bmkssj'],
-                                     bmjssj=active['bmjssj']
-                                     )
-            print(content)
             flag = True
-            send_eamil.send(content)
-    if not flag:
+            wd = get_weekday(active['kssj'])
+            # 活动时间跟本人无冲突
+            if not is_conflict.is_conflict(wd, active['kssj'][-5:-3], active['kssj'][-2:]):
+                # 自动报名
+                response = session.post('http://dekt.jiangnan.edu.cn/biz/activity/signup', json={'id': active['id']}, headers=Headers)
+                print(response.text)
+                if response.text.find('成功') != -1:
+                    send_eamil.send('(报名成功)' + active['hdmc'])
+
+            content += message.format(hdmc=active['hdmc'],
+                                      zmrs=active['zmrs'],
+                                      bmrs=active['bmrs'],
+                                      hddd=active['hddd'],
+                                      hdsc=count_time(active['kssj'], active['jssj']),
+                                      xs=active['xs'],
+                                      weekday=wd,
+                                      kssj=active['kssj'],
+                                      jssj=active['jssj'],
+                                      bmkssj=active['bmkssj'],
+                                      bmjssj=active['bmjssj']
+                                      )
+    if flag:
+        print(content)
+        # 发送提醒邮件
+        send_eamil.send(content)
+    else:
         print('本次查询无结果')
 
 
@@ -77,9 +94,17 @@ def count_time(start_time, end_time):
     return '{hour}小时{minute}分钟'.format(hour=hour, minute=minute)
 
 
+# 计算活动开始日是星期几，便于检查时间是否冲突
+def get_weekday(dt):
+    map = {'Mon': '周一', 'Tue': '周二', 'Wed': '周三', 'Thu': '周四', 'Fri': '周五', 'Sat': '周六', 'Sun': '周日'}
+    dt = dt[0:10]
+    year, month, day = (int(x) for x in dt.split('-'))
+    return map[datetime.date(year, month, day).strftime("%a")]
+
+
 if __name__ == '__main__':
     while True:
         print('开始查询(' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())) + ')')
         check()
-        # 每隔3分钟检查一次
-        time.sleep(3 * 60)
+        # 每隔1分钟检查一次
+        time.sleep(1 * 60)
